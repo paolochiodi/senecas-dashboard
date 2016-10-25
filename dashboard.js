@@ -81,26 +81,25 @@ function filterByMessage (msg) {
 
 var topData
 
-setInterval(function () {
 
-  var data = collector.getData()
-
+function updateMem (mem) {
   memUsageBars.setData({
     titles: ['HU', 'HT', 'RSS'],
     data: [
-      Math.round(data.mem.value.heapUsed / (1024 * 1024)),
-      Math.round(data.mem.value.heapTotal / (1024 * 1024)),
-      Math.round(data.mem.value.rss / (1024 * 1024))
+      Math.round(mem.value.heapUsed / (1024 * 1024)),
+      Math.round(mem.value.heapTotal / (1024 * 1024)),
+      Math.round(mem.value.rss / (1024 * 1024))
     ]
   })
+}
 
-
+function updateMessages (msgs) {
   var lineData = []
   var colors = ['purple', 'brown', 'yellow', 'blue', 'white', 'red']
   topData = []
 
-  Object.keys(data.msgs).forEach(function (key) {
-    var msg = data.msgs[key]
+  Object.keys(msgs).forEach(function (key) {
+    var msg = msgs[key]
     var validHistory = msg.history.slice(-20)
     var x = msg.history.map(pickTime)
     var y = msg.history.map(pickValue)
@@ -128,6 +127,16 @@ setInterval(function () {
     headers: ['msg', 'value', 'rate %'],
     data: topData
   })
+}
+
+function update () {
+  var data = collector.getData()
+
+  updateMem(data.mem)
+  updateMessages(data.msgs)
 
   screen.render()
-}, 200)
+  setTimeout(update, 200)
+}
+
+setTimeout(update, 200)
