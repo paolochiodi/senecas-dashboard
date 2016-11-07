@@ -1,142 +1,47 @@
 
-var collector = require('./collector')
-var blessed = require('blessed')
-var contrib = require('blessed-contrib')
-var screen = blessed.screen()
-var filter = null
+const Blessed = require('blessed')
+const Contrib = require('blessed-contrib')
 
+const Bus = require('./lib/bus')
+const Collector = require('./lib/collector')
 
-screen.key(['escape', 'q', 'C-c'], function(ch, key) {
-  return process.exit(0);
-});
+const Memory = require('./lib/widgets/memory')
+const MsgGraph = require('./lib/widgets/msg-graph')
+const MsgTop = require('./lib/widgets/msg-top')
 
-screen.render()
+const bus = new Bus()
+const collector = new Collector(bus)
+const screen = Blessed.screen()
 
-var grid = new contrib.grid({rows: 12, cols: 12, screen: screen})
-var line = grid.set(4, 2, 4, 5, contrib.line, {
-  style: {
-    text: "green",
-    baseline: "black"
-  },
-  showLegend: true,
-  xLabelPadding: 3,
-  xPadding: 5,
-  label: 'Message Flow'
-})
-
-var msgTop = grid.set(0, 2, 4, 5, contrib.table, {
-  label: 'Messages',
-  keys: true,
-  fg: 'green',
-  selectedFg: 'white',
-  selectedBg: 'blue',
-  interactive: true,
-  columnWidth: [12, 6, 6]
-})
-msgTop.focus()
-msgTop.rows.on('select', function (item, index) {
-  filter = topData[index][0]
-})
-msgTop.rows.on('keypress', function (key) {
-  if (key === 'a') {
-    filter = null
-  }
-})
-
-var memUsageBars = grid.set(0, 0, 4, 2, contrib.bar, {
-  label: 'Memory Utilization (%)',
-  maxHeight: 100,
-  barWidth: 3,
-  barSpacing: 1
-})
-memUsageBars.setData({
-  titles: ['HU', 'HT', 'RSS'],
-  data: [0, 0, 0]
-})
-
+setupScreen()
 collector.start()
 
-function pickTime (record) {
-  return new Date(record.time).toTimeString().substring(0,8)
-}
-
-function pickValue (record) {
-  return record.value
-}
-
-function sortByIndex (index) {
-  return function (a, b) {
-    if (a[index] < b[index]) return 1
-    if (a[index] > b [index]) return -1
-    return 0
-  }
-}
-
-function filterByMessage (msg) {
-  return function (record) {
-    if (!msg) return true
-    return record[0] === msg
-  }
-}
-
-var topData
+setTimeout(update, 200)
 
 
-function updateMem (mem) {
-  memUsageBars.setData({
-    titles: ['HU', 'HT', 'RSS'],
-    data: [
-      Math.round(mem.value.heapUsed / (1024 * 1024)),
-      Math.round(mem.value.heapTotal / (1024 * 1024)),
-      Math.round(mem.value.rss / (1024 * 1024))
-    ]
-  })
-}
+function setupScreen () {
+  screen.key(['escape', 'q', 'C-c'], function(ch, key) {
+    return process.exit(0);
+  });
 
-function updateMessages (msgs) {
-  var lineData = []
-  var colors = ['purple', 'brown', 'yellow', 'blue', 'white', 'red']
-  topData = []
+  screen.render()
 
-  Object.keys(msgs).forEach(function (key) {
-    var msg = msgs[key]
-    var validHistory = msg.history.slice(-20)
-    var x = msg.history.map(pickTime)
-    var y = msg.history.map(pickValue)
-    var currentColor = colors.pop()
+  const grid = new Contrib.grid({rows: 12, cols: 12, screen: screen})
+  const msgGraphParent = grid.set(4, 2, 4, 5, Blessed.box, {label: 'Message Flow'})
+  const msgTopParent = grid.set(0, 2, 4, 5, Blessed.box, {label: 'Messages'})
+  const memParent = grid.set(0, 0, 4, 2, Blessed.box, {label: 'Memory Utilization (%)'})
 
-    if (!filter || filter === key) {
-      lineData.push({
-        title: key,
-        style: {line: currentColor},
-        x: x,
-        y: y
-      })
-    }
+  new Memory(bus, memParent)
+  new MsgGraph(bus, msgGraphParent)
+  new MsgTop(bus, msgTopParent)
 
-    topData.push([key, msg.value, msg.rate])
-  })
-
-  if (lineData.length) {
-    line.setData(lineData)
-  }
-
-  topData = topData.sort(sortByIndex(2))
-
-  msgTop.setData({
-    headers: ['msg', 'value', 'rate %'],
-    data: topData
-  })
+  msgTopParent.focus()
 }
 
 function update () {
-  var data = collector.getData()
-
-  updateMem(data.mem)
-  updateMessages(data.msgs)
+  const data = collector.getData()
+  bus.emit('data', data)
 
   screen.render()
   setTimeout(update, 200)
 }
-
-setTimeout(update, 200)

@@ -10,7 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "blessed": "^0.1.81",
-    "blessed-contrib": "^3.5.5",
+    "blessed-contrib": "^4.5.5"
+  },
+  "devDependencies": {
     "seneca": "^3.2.1",
     "seneca-msgstats": "https://github.com/senecajs-labs/seneca-msgstats.git"
   }
