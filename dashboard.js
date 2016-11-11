@@ -8,6 +8,7 @@ const Collector = require('./lib/collector')
 const Memory = require('./lib/widgets/memory')
 const MsgGraph = require('./lib/widgets/msg-graph')
 const MsgTop = require('./lib/widgets/msg-top')
+const Trace = require('./lib/widgets/trace')
 
 const bus = new Bus()
 const collector = new Collector(bus)
@@ -30,10 +31,12 @@ function setupScreen () {
   const msgGraphParent = grid.set(4, 2, 4, 5, Blessed.box, {label: 'Message Flow'})
   const msgTopParent = grid.set(0, 2, 4, 5, Blessed.box, {label: 'Messages'})
   const memParent = grid.set(0, 0, 4, 2, Blessed.box, {label: 'Memory Utilization (%)'})
+  const traceParent = grid.set(8, 0, 4, 12, Blessed.box, {label: 'Trace', bg: 'red'})
 
   new Memory(bus, memParent)
   new MsgGraph(bus, msgGraphParent)
   new MsgTop(bus, msgTopParent)
+  new Trace(bus, traceParent)
 
   msgTopParent.focus()
 }
