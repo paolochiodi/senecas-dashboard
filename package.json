@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "seneca": "^3.2.1",
-    "seneca-msgstats": "https://github.com/senecajs-labs/seneca-msgstats.git"
+    "seneca-msgstats": "https://github.com/senecajs-labs/seneca-msgstats.git",
+    "seneca-zipkin-tracer": "https://github.com/paolochiodi/seneca-zipkin-tracer.git#feature/integration-tests"
   }
 }
