@@ -1,0 +1,42 @@
+
+var Seneca = require('seneca')
+
+var server = Seneca({
+  log:'silent',
+  tag: 'mesh2'
+})
+
+server.add('mesh:2', function (msg, done) {
+  setTimeout(function () {
+    done(null, {hello: 'mesh 2'})
+  }, Math.round(Math.random()*100))
+})
+
+server.use('zipkin-tracer', {
+  sampling: 1,
+  transport: "http"
+})
+server.use('msgstats', {
+  pins: ['mesh:1', 'mesh:2']
+})
+server.use('mesh', {
+  type: 'tcp',
+  pin: 'mesh:2'
+})
+
+function noop () {}
+
+server.ready(function () {
+  console.log('up and running')
+
+  setInterval(function generateRandomMessages() {
+    console.log('sending')
+
+    var one = Math.round(Math.random() * 6)
+
+    for(i = 0; i < one; i++) {
+      server.act('mesh:1', noop)
+    }
+
+  }, 700)
+})

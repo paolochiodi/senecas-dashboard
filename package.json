@@ -11,10 +11,12 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.5.5",
+    "seneca": "^3.2.1",
+    "seneca-balance-client": "^0.6.0",
+    "seneca-mesh": "^0.9.0",
     "wreck": "^10.0.0"
   },
   "devDependencies": {
-    "seneca": "^3.2.1",
     "seneca-msgstats": "https://github.com/senecajs-labs/seneca-msgstats.git",
     "seneca-zipkin-tracer": "https://github.com/paolochiodi/seneca-zipkin-tracer.git#feature/integration-tests"
   }

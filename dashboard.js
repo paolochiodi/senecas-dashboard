@@ -4,22 +4,26 @@ const Contrib = require('blessed-contrib')
 
 const Bus = require('./lib/bus')
 const Collector = require('./lib/collector')
+const SenecaListener = require('./lib/seneca')
 
 const Memory = require('./lib/widgets/memory')
 const MsgGraph = require('./lib/widgets/msg-graph')
 const MsgTop = require('./lib/widgets/msg-top')
 const Trace = require('./lib/widgets/trace')
 const TraceList = require('./lib/widgets/trace-list')
+const MeshNetwork = require('./lib/widgets/mesh-network')
 const Help = require('./lib/widgets/help')
 
 const bus = new Bus()
 const collector = new Collector(bus)
+const seneca = new SenecaListener()
 const screen = Blessed.screen()
 
 setupScreen()
 collector.start()
 
 setTimeout(update, 200)
+setTimeout(updateNetwork, 500)
 
 
 function setupScreen () {
@@ -39,6 +43,7 @@ function setupScreen () {
   const traceParent = grid.set(8, 0, 4, 12, Blessed.box, {label: 'Trace'})
   const traceListParent = grid.set(8, 0, 4, 12, Blessed.box, {label: 'Traces'})
   const helpParent = grid.set(0, 0, 4, 2, Blessed.box, {label: 'Help'})
+  const meshParent = grid.set(0, 7, 8, 5, Blessed.box, {label: 'Mesh Network'})
 
   new Memory(bus, memParent)
   new MsgGraph(bus, msgGraphParent)
@@ -46,6 +51,7 @@ function setupScreen () {
   new Trace(bus, traceParent)
   new TraceList(bus, traceListParent)
   new Help(bus, helpParent)
+  new MeshNetwork(bus, meshParent)
 
   traceListParent.detach()
 
@@ -77,6 +83,15 @@ function setupScreen () {
     }
   }
 
+}
+
+function advertiseNetwork (err, data) {
+  bus.emit('mesh', data)
+}
+
+function updateNetwork () {
+  seneca.getNetwork(advertiseNetwork)
+  setTimeout(updateNetwork, 1000)
 }
 
 function update () {
